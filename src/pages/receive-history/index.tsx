@@ -1,0 +1,77 @@
+import { Card, PanelContent } from "@/components";
+import axiosInstance from "@/libs/axiosInstance";
+import React, { useEffect, useState } from "react";
+import Swal from "sweetalert2";
+
+const Receive = () => {
+  const [recieves, setRecieves] = useState<TransferReceiveModel[]>([]);
+
+  useEffect(() => {
+    const json = localStorage.getItem('userData') || '';
+    if (json) {
+      const userData = JSON.parse(json);
+      if (userData) {
+        fetchData(userData.accountID);
+      }
+    }
+
+  }, [])
+
+  const fetchData = async (accounId: string) => {
+    try {
+      const response = await axiosInstance.get(`/transfer/${accounId}/receive`);
+      console.log(response.data)
+      if (response.status == 200) {
+        setRecieves(response.data)
+      }
+    } catch (err) {
+      const errData = (err as any)?.response?.data;
+
+      Swal.fire({
+        text: `${errData?.errCode} : ${errData?.errMsg}`,
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+      });
+    }
+  }
+
+  return (
+    <PanelContent
+      title="Receive"
+      menu="My Account"
+      submenu="Receive History"
+      headerContent
+    >
+      <Card title="Receive Details">
+        <table className="table">
+          <thead>
+            <tr>
+              <th>Date time</th>
+              <th>User</th>
+              <th>Remain</th>
+              <th>Action</th>
+              <th>From</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(recieves.length <= 0) ? <tr><td colSpan={6}>No Data</td></tr> : recieves?.map(item =>
+              <>
+                <tr>
+                  <td>{new Date(item.transferDate).toLocaleString()}</td>
+                  <td>{item.name}</td>
+                  <td>{item.remain.toLocaleString()}</td>
+                  <td>{item.action}</td>
+                  <td>{item.fromOrTo}</td>
+                  <td>{item.amount.toLocaleString()}</td>
+                </tr>
+              </>
+            )}
+          </tbody>
+        </table>
+      </Card>
+    </PanelContent>
+  );
+};
+
+export default Receive;
